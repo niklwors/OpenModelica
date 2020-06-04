@@ -1,0 +1,30 @@
+{
+  "version": "0.2.1",
+  "defaults": {},
+  "configurations": [
+    {
+      "type": "default",
+      "project": "D:\\ESS12\\ESS12_OMC-ZeroMQ\\omcZeroMQ\\out\\build\\x64-Debug\\Debug\\omcZeroMQServer.exe",
+      "name": "omcZeroMQ",
+      "args": [
+        "-p",
+        "3203",
+        "-s",
+        "3204",
+        "-i",
+        "1",
+        "-o",
+        "D:/OpenModelica/omc/omc_x64_dev/build",
+        "-w",
+        "C:/temp"
+      ],
+      "env": {
+        "PATH": "D:\\OpenModelica\\omc\\omc_x64_dev\\build\\bin;${env.PATH}"
+       
+      }
+
+
+    }
+   
+  ]
+}

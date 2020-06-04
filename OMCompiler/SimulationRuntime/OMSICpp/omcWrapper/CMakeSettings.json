@@ -1,0 +1,46 @@
+﻿{
+  "environments": [
+    {
+      "PATH": "D:\\OpenModelica\\omc\\omc_x64_dev\\build\\bin;${env.PATH}",
+      "OPENMODELICAHOME": "D:\\OpenModelica\\omc\\omc_x64_dev\\build",
+      "OPENMODELICALIBRARY": "D:\\OpenModelica\\omc\\omc_x64_dev\\build\\lib\\omlibrary"
+    }
+   ],
+  "configurations": [
+    {
+
+      "cmakeCommandArgs": "",
+      "ctestCommandArgs": "",
+      "generator": "Visual Studio 14 2015 Win64",
+     
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "name": "x64-Debug",
+      "variables": [
+        {
+          "name": "CMAKE_PREFIX_PATH",
+          "value": "D:\\ESS12\\ESS12_OMC-ZeroMQ\\3rdParty\\libzmq-4.3.2;D:\\ESS12\\ESS12_OMC-ZeroMQ\\3rdParty\\cppzmq\\share\\cmake",
+          "type": "STRING"
+        },
+        {
+          "name": "CMAKE_BUILD_TYPE",
+          "value": "Debug",
+          "type": "STRING"
+        },
+        {
+          "name": "OMCAPI_ROOT",
+          "value": "D:\\ESS12\\ESS12_OMC-ZeroMQ\\3rdParty\\omccapi",
+          "type": "STRING"
+        },
+        {
+          "name": "BOOST_ROOT",
+          "value": "D:\\ESS12\\ESS12_OMC-ZeroMQ\\3rdParty\\boost",
+          "type": "STRING"
+        }
+
+
+      ],
+
+      "intelliSenseMode": "windows-msvc-x64"
+    }
+  ]
+}

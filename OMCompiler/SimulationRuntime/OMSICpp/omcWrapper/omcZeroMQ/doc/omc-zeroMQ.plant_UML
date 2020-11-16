@@ -51,7 +51,7 @@ if (not loaded?)  then (yes)
   note right
   via zeroMQ 
   command send from
-  client application
+  client application or simulation threads
   end note
   :read json user command information;
   note right
@@ -72,7 +72,7 @@ end note
 if (command type == **SimulationThreadWatingForID**) then (yes)
   : send command id (jobID)  and **StartSimulationThread** command >
   note right
-  via zeroMQ to omc translation thread
+  via zeroMQ to simulation thread
  end note
 
 'case 1 end
@@ -85,8 +85,7 @@ if (command type == **SimulationThreadWatingForID**) then (yes)
 elseif (command type == **StopSimulation**) then (yes)
   : send **StopSimulationThread** command >
   note right
-  via zeroMQ to omc translation thread
-  with used command id (jobID) 
+  via zeroMQ to progress thread
   end note
 
 'case 2 end

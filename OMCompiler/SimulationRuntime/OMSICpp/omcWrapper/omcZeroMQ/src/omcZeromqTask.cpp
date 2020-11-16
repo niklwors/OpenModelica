@@ -136,9 +136,7 @@ void omcZeromqTask::run()
                 std::thread simulation = std::thread(&omcZeromqTask::startSimulation, this, std::ref(root));
                 simulation.detach();
 
-                s_sendmore(publisher_, _client_id);
-                s_sendmore(publisher_, "SimulationStarted");
-                s_send(publisher_, "{\"JobId\":\"" + jobId + "\"}");
+
             }
             else if (type == "SimulationThreadWatingForID")
             {

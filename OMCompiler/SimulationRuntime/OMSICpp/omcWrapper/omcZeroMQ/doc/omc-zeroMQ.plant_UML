@@ -1,0 +1,265 @@
+@startuml
+|#Cornsilk|omc-zeroMQ.""main()""|
+start
+-> main thread starts
+with calling
+""omc.cpp:main()"";
+:read program arguments;
+
+:instantiate omc and 
+ initialize omc with 
+ zeroMQ configuration parameter
+ via omc C-API function;
+note right
+  *which ports should be used
+  *id's for client and simulation
+  *OpenModelica compiler installation path
+  *working directory
+  *C++ compiler
+  *print debug information
+end note
+ 
+ '_______________________________________________________________
+ 'here starts zeroMQ thread and main thread
+ '_______________________________________________________________
+ 
+ fork
+'_______________________________________________________________
+ 'main thread
+'_______________________________________________________________
+ -> main thread continues;
+   :Waiting for thread zeroMQ 
+   until application 
+   is terminated;
+ 
+  fork again
+'_______________________________________________________________
+'zeroMQ thread
+'_______________________________________________________________
+  
+|#CornflowerBlue|zeroMQ thread: ""omcZeromqTask.run()""| 
+:setup zeroMQ connection;
+:load Modelica standard library;
+if (not loaded?)  then (yes)
+  #pink:forward error to main thread ;
+  end
+  endif
+
+'partition "process user input commands" {
+  while (omc-zeroMQ not closed?)
+  :wait for  user command  <
+  note right
+  via zeroMQ 
+  command send from
+  client application
+  end note
+  :read json user command information;
+  note right
+  *simulation ID
+  *command type (StartSimulation,StopSimulation,SimulationThreadWatingForID)
+  *command argumentes
+  *command ID (jobID)
+end note
+'_______________________________________________________________
+'process user command
+'_______________________________________________________________
+ 
+
+'________________
+' case 1
+
+
+if (command type == **SimulationThreadWatingForID**) then (yes)
+  : send command id (jobID)  and **StartSimulationThread** command >
+  note right
+  via zeroMQ to omc translation thread
+ end note
+
+'case 1 end
+'________________
+
+
+
+'________________ 
+'case 2
+elseif (command type == **StopSimulation**) then (yes)
+  : send **StopSimulationThread** command >
+  note right
+  via zeroMQ to omc translation thread
+  with used command id (jobID) 
+  end note
+
+'case 2 end
+'________________
+
+
+'________________ 
+'case 3
+
+ elseif (command type ==  **StartSimulation**) then (yes)
+ :set command id (jobID) in omc instance
+  via omc C-API function;
+  fork
+  :continue;
+  fork again
+
+'_______________________________________________________________
+'StartSimulation  thread
+'_______________________________________________________________
+
+|#CadetBlue|omc translation thread: ""omcZeromqTask::startSimulation()""|
+  : read command arguments for Modelica file paths 
+  of  needed Modelica files;
+  : load all Modelica files with omc C-API function
+  **LoadFile**;
+  : read command arguments for Modelica model parameter;
+  :set all Modelica parameter with with omc C-API function
+  **SendCommand**;
+  :set the working directory with omc C-API function
+  **SetWorkingDirectory**;
+  : read command arguments for simulation parameter; 
+note right
+  *simulation stop time
+  *number of intervalls
+  *tolerance
+  *solver name
+end note
+'partition "start simulation with omc C-API function **SendCommand**" {
+    :translate Modelica code to simulation executable;
+    :SimController.Start();
+    note right
+  executes simulation with simulation arguments
+  end note
+    fork
+    |#LightSlateGrey|simulation thread|
+      :send ""SimulationThreadWatingForID""  >
+  note right
+  via zeroMQ 
+  command to omcZeromqTask
+  to receive command id (jobID)
+  end note
+     :wait for command id (jobID)  <
+  note right
+  via zeroMQ 
+  command id is send by omcZeromqTask 
+ 
+  end note
+   : ""setSimStarted()""; 
+  note right
+  informs controller of simulation
+  and progress threads
+  end note
+
+    : send **SimulationStarted** command >
+  note right
+  via zeroMQ to client application 
+  with used command id (jobID) 
+  end note
+      :initialize simulation;
+      :run simulation;
+      : send **SimulationStopped** command >
+  note right
+  via zeroMQ to client application 
+  with used command id (jobID) 
+  end note
+   : ""setSimStopped()""; 
+  note right
+  informs controller of simulation
+  and progress threads
+  end note
+
+'_______________________________________________________________
+'StartSimulation  thread
+'_______________________________________________________________
+ 
+ 
+ fork again
+ 
+ 
+'_______________________________________________________________
+'Progress  thread
+'_______________________________________________________________
+    |#DarkSlateGrey|progress thread|
+    : ""setGuiStarted()""; 
+  note right
+  informs controller of simulation
+  and progress threads
+  end note
+    while (not simulation stoped?)
+      : get latest integrator step time;
+      : send **SimulationProgressChanged** command >
+  note right
+  via zeroMQ client application
+  with used command id (jobID) 
+  end note
+   :ask for simulation stop <
+  note right
+  via zeroMQ 
+  command send from
+  client application
+  end note
+  if (simulation is stopped?) then
+  :inform thread controller to 
+  stop threads;
+  endif
+  endwhile
+    : ""setGuiStopped()""; 
+  note right
+  informs controller of simulation
+  and progress threads
+  end note
+ |#CadetBlue|omc translation thread: ""omcZeromqTask::startSimulation()""|
+    end fork
+'_______________________________________________________________
+'Progress  thread end
+'_______________________________________________________________
+'}
+ :Check if exceptions
+   have occurred in 
+   simulation thread and forward 
+   it to omcZeromqTask.run();
+end
+'if (not simulated?)  then (yes)
+'  #pink:forward error to main thread ;
+'endif
+
+|#CornflowerBlue|zeroMQ thread: ""omcZeromqTask.run()""| 
+endfork
+
+
+'________________ 
+'case 3 end
+else
+:forward exception 
+**commandNotSupported** 
+to omc-zeroMQ.""main()"";
+end
+endif
+
+
+endwhile
+
+
+
+
+|#Cornsilk|omc-zeroMQ.""main()""|
+  end fork
+
+
+'_______________________________________________________________
+' All threads stopped, main thread ends
+'_______________________________________________________________ 
+  :Check if exceptions
+   have occurred in 
+   simulation threads;
+   :Printing errors 
+   that have occurred 
+   in output;
+stop
+
+
+
+
+
+
+@enduml
